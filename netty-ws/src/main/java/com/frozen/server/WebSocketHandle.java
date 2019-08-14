@@ -22,8 +22,9 @@ public class WebSocketHandle extends SimpleChannelInboundHandler<Object> {
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         System.out.println("channelRead0    ");
         if(msg instanceof TextWebSocketFrame){
-            System.out.println("收到消息："+((TextWebSocketFrame)msg).text());
-//            ctx.channel().writeAndFlush(new TextWebSocketFrame("123456"));
+            String msgStr= ((TextWebSocketFrame)msg).text();
+            System.out.println("收到消息："+msgStr);
+            ctx.channel().writeAndFlush(new TextWebSocketFrame(msgStr));
         }else if(msg instanceof BinaryWebSocketFrame){
             System.out.println("收到二进制消息："+((BinaryWebSocketFrame)msg).content().readableBytes());
             BinaryWebSocketFrame binaryWebSocketFrame=new BinaryWebSocketFrame(Unpooled.buffer().writeBytes("xxx".getBytes()));
