@@ -24,7 +24,6 @@ public class CloseAIModelCommand implements InnerCommand {
 
     @Override
     public void process(String msg) {
-        msgHandle.closeAIModel();
         System.out.println("\033[31;4m" + "｡ﾟ(ﾟ´ω`ﾟ)ﾟ｡  AI 下线了！" + "\033[0m");
     }
 }

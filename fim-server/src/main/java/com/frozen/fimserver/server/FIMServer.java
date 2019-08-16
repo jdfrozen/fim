@@ -95,12 +95,12 @@ public class FIMServer {
      * @param msg
      */
     public void sendAllMsg(String msg){
-        Set< NioSocketChannel> set =SessionSocketHolder.getSet();
-        for(NioSocketChannel nioSocketChannel:set){
+        Map<String, NioSocketChannel> map =  SessionSocketHolder.getUserMAP();
+        for(Map.Entry<String, NioSocketChannel> entry:map.entrySet()){
+            NioSocketChannel nioSocketChannel = entry.getValue();
             ChannelFuture future = nioSocketChannel.writeAndFlush(new TextWebSocketFrame(msg));
             future.addListener((ChannelFutureListener) channelFuture ->
                     LOGGER.info("服务端手动群聊给发送消息：{}，成功！",msg));
         }
-
     }
 }

@@ -13,15 +13,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since JDK 1.8
  */
 public class SessionSocketHolder {
-    private static final Set<NioSocketChannel> ALLUSER_CHANNEL_SET = new HashSet<>();
+    private static final Map<String, NioSocketChannel> ALLUSER_CHANNEL_MAP = new ConcurrentHashMap<>(16);
     private static final Map<Long, NioSocketChannel> CHANNEL_MAP = new ConcurrentHashMap<>(16);
 
-    synchronized public static void   add(NioSocketChannel socketChannel) {
-        ALLUSER_CHANNEL_SET.add( socketChannel);
+    synchronized public static void putUser(String sessionId,NioSocketChannel socketChannel) {
+        ALLUSER_CHANNEL_MAP.put(sessionId,socketChannel);
     }
 
-    synchronized public static void removeSet(NioSocketChannel socketChannel) {
-        ALLUSER_CHANNEL_SET.remove( socketChannel);
+    synchronized public static void removeUser(String sessionId) {
+        ALLUSER_CHANNEL_MAP.remove( sessionId);
     }
 
     public static void put(Long id, NioSocketChannel socketChannel) {
@@ -32,12 +32,12 @@ public class SessionSocketHolder {
         return CHANNEL_MAP.get(id);
     }
 
-    public static Map<Long, NioSocketChannel> getMAP() {
-        return CHANNEL_MAP;
+    public static Map<String, NioSocketChannel> getUserMAP() {
+        return ALLUSER_CHANNEL_MAP;
     }
 
-    public static Set< NioSocketChannel> getSet() {
-        return ALLUSER_CHANNEL_SET;
+    public static Map<Long, NioSocketChannel> getMAP() {
+        return CHANNEL_MAP;
     }
 
     public static void remove(NioSocketChannel nioSocketChannel) {

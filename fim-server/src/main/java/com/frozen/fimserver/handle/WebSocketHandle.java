@@ -1,14 +1,16 @@
 package com.frozen.fimserver.handle;
 
+import com.frozen.fimserver.service.MsgHandler;
 import com.frozen.fimserver.util.SessionSocketHolder;
+import com.frozen.fimserver.util.SpringBeanFactory;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
-import org.springframework.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author: Frozen
@@ -16,26 +18,27 @@ import org.springframework.util.StringUtils;
  * @description:
  **/
 public class WebSocketHandle extends SimpleChannelInboundHandler<Object> {
-    private WebSocketServerHandshaker handshaker;
+    private final static Logger LOGGER = LoggerFactory.getLogger(MsgHandler.class);
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("channelActive connect");
-        SessionSocketHolder.add((NioSocketChannel) ctx.channel());
+        LOGGER.info("channelActive connect");
+        String sessionId = ctx.channel().id().asLongText();
+        SessionSocketHolder.putUser(sessionId,(NioSocketChannel) ctx.channel());
     }
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+        //判断是否ws消息
         if(msg instanceof TextWebSocketFrame){
             String msgStr= ((TextWebSocketFrame)msg).text();
-            if(!StringUtils.isEmpty(msgStr)){
-                if(msgStr.contains("login")){
-                    String[] strings = StringUtils.split(msgStr,":");
-                    SessionSocketHolder.put(Long.valueOf(strings[1]), (NioSocketChannel) ctx.channel());
-                }
-            }
-            System.out.println("收到消息："+msgStr);
-            ctx.channel().writeAndFlush(new TextWebSocketFrame(msgStr));
+            MsgHandler msgHandler = SpringBeanFactory.getBean(MsgHandler.class) ;
+            //处理通道
+            msgHandler.channelHandler(ctx,msgStr);
+            //处理消息
+            String sessionId = ctx.channel().id().asLongText();
+            String respones = msgHandler.sendMsg(sessionId,msgStr);
+            //ctx.channel().writeAndFlush(new TextWebSocketFrame(respones));
         }else if(msg instanceof BinaryWebSocketFrame){
-            System.out.println("收到二进制消息："+((BinaryWebSocketFrame)msg).content().readableBytes());
+            LOGGER.info("收到二进制消息："+((BinaryWebSocketFrame)msg).content().readableBytes());
             BinaryWebSocketFrame binaryWebSocketFrame=new BinaryWebSocketFrame(Unpooled.buffer().writeBytes("xxx".getBytes()));
             ctx.channel().writeAndFlush(binaryWebSocketFrame);
         }
@@ -43,12 +46,13 @@ public class WebSocketHandle extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("channelUnregistered");
-        SessionSocketHolder.removeSet((NioSocketChannel) ctx.channel());
+        LOGGER.info("channelUnregistered");
+        String sessionId = ctx.channel().id().asLongText();
+        SessionSocketHolder.removeUser(sessionId);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("channelInactive");
+        LOGGER.info("channelInactive");
     }
 }

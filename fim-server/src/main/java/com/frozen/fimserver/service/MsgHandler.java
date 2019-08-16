@@ -1,5 +1,10 @@
 package com.frozen.fimserver.service;
 
+import com.frozen.fimserver.util.SessionSocketHolder;
+import com.frozen.fimserver.util.SpringBeanFactory;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +15,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -23,56 +29,62 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class MsgHandler{
     private final static Logger LOGGER = LoggerFactory.getLogger(MsgHandler.class);
-
-    private boolean aiModel = false;
     @Autowired
     private InnerCommandContext innerCommandContext ;
 
-    public void sendMsg(String msg) {
-        if (aiModel) {
-            aiChat(msg);
-        } else {
-            normalChat(msg);
-        }
-    }
-
-    /**
-     * 正常聊天
-     *
-     * @param msg
-     */
-    private void normalChat(String msg) {
+    public String sendMsg(String sessionId, String msg) {
         String[] totalMsg = msg.split(";;");
         if (totalMsg.length > 1) {
             //私聊
-            try {
-                //p2pChat(p2PReqVO);
-            } catch (Exception e) {
-                LOGGER.error("Exception", e);
+            LOGGER.info("私聊");
+            NioSocketChannel nioSocketChannel = SessionSocketHolder.getMAP().get(totalMsg[1]);
+            if(nioSocketChannel==null){
+                return "用户不在线";
             }
-
+            nioSocketChannel.writeAndFlush(new TextWebSocketFrame(msg));
         } else {
             //群聊
-            try {
-               // groupChat(groupReqVO);
-            } catch (Exception e) {
-                LOGGER.error("Exception", e);
+            LOGGER.info("群聊");
+            Map<String, NioSocketChannel> map =  SessionSocketHolder.getUserMAP();
+            for(Map.Entry<String, NioSocketChannel> entry:map.entrySet()){
+                //过滤自己
+                if(sessionId.equals(entry.getKey())){
+                    continue;
+                }
+                NioSocketChannel nioSocketChannel = entry.getValue();
+                nioSocketChannel.writeAndFlush(new TextWebSocketFrame(msg));
+            }
+        }
+        return "返回应答";
+    }
+
+    /**
+     * 处理用户消息通道
+     * @param ctx
+     * @param msg
+     */
+    public void channelHandler(ChannelHandlerContext ctx,String msg) {
+        if(!StringUtils.isEmpty(msg)){
+            if(msg.contains("login")){
+                String[] strings = StringUtils.split(msg,":");
+                SessionSocketHolder.put(Long.valueOf(strings[1]), (NioSocketChannel) ctx.channel());
             }
         }
     }
+
 
     /**
      * AI model
      *
      * @param msg
      */
-    private void aiChat(String msg) {
+    private String aiChat(String msg) {
         msg = msg.replace("吗", "");
         msg = msg.replace("嘛", "");
         msg = msg.replace("?", "!");
         msg = msg.replace("？", "!");
         msg = msg.replace("你", "我");
-        System.out.println("AI:\033[31;4m" + msg + "\033[0m");
+        return msg;
     }
 
 
@@ -84,9 +96,12 @@ public class MsgHandler{
         return false;
     }
 
-
+    /**
+     * 内置命令
+     * @param msg
+     * @return
+     */
     public boolean innerCommand(String msg) {
-
         if (msg.startsWith(":")) {
             InnerCommand instance = innerCommandContext.getInstance(msg);
             instance.process(msg) ;
@@ -101,26 +116,6 @@ public class MsgHandler{
     }
 
 
-    /**
-     * 模糊匹配
-     *
-     * @param msg
-     */
-    private void prefixSearch(String msg) {
-        try {
-            String[] split = msg.split(" ");
-            String key = split[1];
-            List<String> list = new ArrayList<>();
-
-            for (String res : list) {
-                res = res.replace(key, "\033[31;4m" + key + "\033[0m");
-                System.out.println(res);
-            }
-
-        } catch (Exception e) {
-            LOGGER.error("Exception", e);
-        }
-    }
 
     /**
      * 查询聊天记录
@@ -144,17 +139,6 @@ public class MsgHandler{
         } catch (Exception e) {
             LOGGER.error("Exception", e);
         }
-    }
-
-
-
-    public void openAIModel() {
-        aiModel = true;
-    }
-
-
-    public void closeAIModel() {
-        aiModel = false ;
     }
 
     private void printAllCommand(Map<String, String> allStatusCode) {

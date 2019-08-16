@@ -24,7 +24,6 @@ public class OpenAIModelCommand implements InnerCommand {
 
     @Override
     public void process(String msg) {
-        msgHandle.openAIModel();
         System.out.println("\033[31;4m" + "Hello,我是估值两亿的 AI 机器人！" + "\033[0m");
     }
 }
