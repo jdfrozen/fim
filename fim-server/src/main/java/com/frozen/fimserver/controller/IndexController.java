@@ -1,22 +1,26 @@
 package com.frozen.fimserver.controller;
 
+import com.frozen.fimserver.server.FIMServer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * @author: Frozen
- * @create: 2019-08-15 14:24
+ * @create: frozen-15 14:24
  * @description:
  **/
 @Controller
 @RequestMapping("/")
 public class IndexController {
+    @Autowired
+    private FIMServer fimServer;
     @RequestMapping(value = "sendMsg")
     @ResponseBody
-    public String sendMsg(){
-        return "frozen" ;
+    public String sendMsg(@RequestParam String msg){
+        fimServer.sendAllMsg(msg);
+        return "success";
     }
 }
