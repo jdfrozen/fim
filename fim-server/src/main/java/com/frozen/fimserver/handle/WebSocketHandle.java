@@ -1,7 +1,7 @@
 package com.frozen.fimserver.handle;
 
 import com.frozen.fimserver.service.MsgHandler;
-import com.frozen.fimserver.util.SessionSocketHolder;
+import com.frozen.fimserver.session.SessionSocketHolder;
 import com.frozen.fimserver.util.SpringBeanFactory;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;

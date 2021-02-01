@@ -1,7 +1,6 @@
 package com.frozen.fimserver.service;
 
-import com.frozen.fimserver.util.SessionSocketHolder;
-import com.frozen.fimserver.util.SpringBeanFactory;
+import com.frozen.fimserver.session.SessionSocketHolder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -11,13 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Function:

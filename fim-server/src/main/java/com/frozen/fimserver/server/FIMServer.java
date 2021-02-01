@@ -1,7 +1,7 @@
 package com.frozen.fimserver.server;
 
 import com.frozen.fimserver.channel.init.WebSocketChannelInitializer;
-import com.frozen.fimserver.util.SessionSocketHolder;
+import com.frozen.fimserver.session.SessionSocketHolder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -20,7 +20,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Function:

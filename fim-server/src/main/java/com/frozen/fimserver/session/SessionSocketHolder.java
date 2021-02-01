@@ -1,4 +1,4 @@
-package com.frozen.fimserver.util;
+package com.frozen.fimserver.session;
 
 import io.netty.channel.socket.nio.NioSocketChannel;
 
